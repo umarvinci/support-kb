@@ -1,0 +1,67 @@
+---
+layout: runbook
+title: '#4471 · what the reports show'
+owner: umarvinci
+status: open
+reviewed: 2026-10-29
+signature: umarvinci
+---
+
+<script>
+  import ProblemTable from '#lib/kb/ProblemTable.svelte';
+  import Callout from '#lib/kb/Callout.svelte';
+  import RenderStamp from '#lib/kb/RenderStamp.svelte';
+
+  // Where each problem is tracked now.
+  const tickets = {
+    parser: 'https://github.com/umarvinci/support-kb/issues/1',
+    hint: 'https://github.com/umarvinci/support-kb/issues/2',
+    shift: 'https://github.com/umarvinci/support-kb/issues/3',
+  };
+</script>
+
+[#4471](/kb/incidents/4471) is not one issue. The desk merged its reports by subject line, so
+different problems with the same symptom, a booking on the wrong day, ended up in one ticket.
+Each problem has its own ticket now.
+
+<ProblemTable ticket={4471} {tickets} />
+
+<Callout kind="warn">
+The parser fix queued for #4471 closes only <code>parser</code>. The <code>hint</code> and
+<code>shift</code> reports will keep coming after it ships.
+</Callout>
+
+## parser: the shared parser reads month first
+
+Every tenant on file writes the day first. The shared parser reads every date month first, so a
+booking for 2 December lands on 12 February. This is the problem the [#4471 page](/kb/incidents/4471)
+describes, and the queued fix covers it. Tracked in [umarvinci/support-kb#1](https://github.com/umarvinci/support-kb/issues/1).
+
+## hint: booking-v3 asks for the month first
+
+booking-v3 prints `MM/DD/YYYY` under its date field. Its tenants write the day first, so their
+people type the month first, as the hint tells them, and the form then reads the date day first.
+The swap happens in the form, before the parser sees the date. The cause table on the #4471 page
+already marks these reports "not this ticket"; they had no ticket of their own until
+[umarvinci/support-kb#2](https://github.com/umarvinci/support-kb/issues/2).
+
+## shift: a date moves by one day
+
+Some reports describe a date moved by one day, or one meeting on different days for people in
+different places: Tuesday in Lisbon, Monday in Toronto. A month/day swap can't do that. The desk
+noted these as one-day moves in `desk-notes.json` but filed them under parser by tenant. They
+point at time zones; the cause isn't confirmed yet. Tracked in
+[umarvinci/support-kb#3](https://github.com/umarvinci/support-kb/issues/3).
+
+## Why one ticket hid them
+
+- [Decision 0001](/kb/decisions/0001-dedupe-by-subject) merges reports whose subject lines match.
+  Every problem here produces the same subjects ("Wrong day on the invite", "Month and day
+  swapped?"), so the subject can't tell them apart.
+- Intake's tag is a guess from the reporter's browser, not from the tenant, so it doesn't
+  separate them either.
+- What separates them is where a report comes from (its tenant and booking form) and what it says
+  happened (a swap, or a one-day move). `problems.ts` makes that split, and the table above is
+  built from it when the page renders.
+
+<RenderStamp {signature} />
