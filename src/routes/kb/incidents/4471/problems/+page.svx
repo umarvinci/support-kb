@@ -12,46 +12,51 @@ signature: umarvinci
   import Callout from '#lib/kb/Callout.svelte';
   import RenderStamp from '#lib/kb/RenderStamp.svelte';
 
-  // Where each problem is tracked now.
+  // Where each problem is tracked, and where that ticket stands.
   const tickets = {
-    parser: 'https://github.com/umarvinci/support-kb/issues/1',
-    hint: 'https://github.com/umarvinci/support-kb/issues/2',
-    shift: 'https://github.com/umarvinci/support-kb/issues/3',
+    parser: { url: 'https://github.com/umarvinci/support-kb/issues/1', state: 'closed: fixed 5 Oct' },
+    hint: { url: 'https://github.com/umarvinci/support-kb/issues/2', state: "closed: won't fix" },
+    shift: { url: 'https://github.com/umarvinci/support-kb/issues/3', state: 'open' },
   };
 </script>
 
-[#4471](/kb/incidents/4471) is not one issue. The desk merged its reports by subject line, so
+[#4471](/kb/incidents/4471) was not one issue. The desk merged its reports by subject line, so
 different problems with the same symptom, a booking on the wrong day, ended up in one ticket.
-Each problem has its own ticket now.
+Each problem has its own ticket now, counted the desk's way: every report under the cause it is
+filed by.
 
 <ProblemTable ticket={4471} {tickets} />
 
 <Callout kind="warn">
-The parser fix queued for #4471 closes only <code>parser</code>. The <code>hint</code> and
-<code>shift</code> reports will keep coming after it ships.
+Engineering closed #4471 on 5 October: <code>parser</code> fixed, <code>hint</code> won't fix
+because the booking-v3 form is retired. Neither change is about time zones, so <code>shift</code>
+stays open.
 </Callout>
 
-## parser: the shared parser reads month first
+## parser: the shared parser read month first
 
-Every tenant on file writes the day first. The shared parser reads every date month first, so a
-booking for 2 December lands on 12 February. This is the problem the [#4471 page](/kb/incidents/4471)
-describes, and the queued fix covers it. Tracked in [umarvinci/support-kb#1](https://github.com/umarvinci/support-kb/issues/1).
+Every tenant on file writes the day first. The shared parser read every date month first, so a
+booking for 2 December landed on 12 February. Engineering fixed it on 5 October
+(`fix(dates): parse dd/mm for eu locales`). The count includes the reports the desk read as
+one-day moves, because the desk files them here by tenant. Tracked in
+[umarvinci/support-kb#1](https://github.com/umarvinci/support-kb/issues/1), closed as fixed.
 
-## hint: booking-v3 asks for the month first
+## hint: booking-v3 asked for the month first
 
-booking-v3 prints `MM/DD/YYYY` under its date field. Its tenants write the day first, so their
-people type the month first, as the hint tells them, and the form then reads the date day first.
-The swap happens in the form, before the parser sees the date. The cause table on the #4471 page
-already marks these reports "not this ticket"; they had no ticket of their own until
-[umarvinci/support-kb#2](https://github.com/umarvinci/support-kb/issues/2).
+booking-v3 printed `MM/DD/YYYY` under its date field. Its tenants write the day first, so their
+people typed the month first, as the hint told them, and the form read the date day first. The
+parser fix doesn't touch this. Engineering won't fix it: the booking-v3 form is retired, so no new
+report can come in through it. Tracked in
+[umarvinci/support-kb#2](https://github.com/umarvinci/support-kb/issues/2), closed as won't fix.
 
 ## shift: a date moves by one day
 
 Some reports describe a date moved by one day, or one meeting on different days for people in
-different places: Tuesday in Lisbon, Monday in Toronto. A month/day swap can't do that. The desk
-noted these as one-day moves in `desk-notes.json` but filed them under parser by tenant. They
-point at time zones; the cause isn't confirmed yet. Tracked in
-[umarvinci/support-kb#3](https://github.com/umarvinci/support-kb/issues/3).
+different places: Tuesday in Lisbon, Monday in Toronto. A month/day swap can't do that, so the
+parser fix won't stop it. The desk noted these as one-day moves in `desk-notes.json` and counts
+them under parser by tenant; they are also their own problem. They point at time zones; the cause
+isn't confirmed yet. Tracked in [umarvinci/support-kb#3](https://github.com/umarvinci/support-kb/issues/3),
+still open.
 
 ## Why one ticket hid them
 
